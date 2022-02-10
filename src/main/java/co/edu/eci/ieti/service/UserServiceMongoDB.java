@@ -21,15 +21,21 @@ public class UserServiceMongoDB implements UserService {
 
     @Override
     public User create(User user) throws UserException {
-
-        return userRepository.save(user);
+        if (userRepository.existsById(user.getId())) {
+            throw new UserException(UserException.USER_CREATE_EXCEPTION);
+        } else {
+            return userRepository.save(user);
+        }
     }
 
     @Override
     public User findById(String id) throws UserException {
-        if (userRepository.existsById(id))
+        if (userRepository.existsById(id)) {
             return userRepository.findById(id).get();
-        return null;
+        } else {
+            throw new UserException(UserException.USER_DOESNOT_EXIST);
+        }
+
     }
 
     @Override
@@ -39,22 +45,29 @@ public class UserServiceMongoDB implements UserService {
 
     @Override
     public void deleteById(String id) throws UserException {
-        userRepository.deleteById(id);
+        try {
+            userRepository.deleteById(id);
+        } catch (Exception e) {
+            throw new UserException(UserException.USER_DOESNOT_EXIST);
+        }
 
     }
 
     @Override
     public User update(UserDto userDto, String userId) throws UserException {
+        User actualUser = new User();
         if (userRepository.existsById(userId)) {
-            User actualUser = userRepository.findById(userId).get();
+            actualUser = userRepository.findById(userId).get();
             actualUser.setCreatedAt(actualUser.getCreatedAt());
             actualUser.setEmail(userDto.getEmail());
             actualUser.setLastName(userDto.getLastName());
             actualUser.setName(userDto.getName());
             userRepository.save(actualUser);
-            return actualUser;
+        } else {
+            throw new UserException(UserException.USER_DOESNOT_EXIST);
         }
-        return null;
+
+        return actualUser;
     }
 
 }
